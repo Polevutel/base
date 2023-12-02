@@ -1,0 +1,40 @@
+CREATE table if not EXISTS Artists (
+   ArtistID SERIAL PRIMARY KEY,
+   Name VARCHAR(255)
+);
+CREATE table if not EXISTS Genres (
+   GenreID SERIAL PRIMARY KEY,
+   Name VARCHAR(255)
+);
+CREATE table if not EXISTS Albums (
+   AlbumID SERIAL PRIMARY KEY,
+   Title VARCHAR(255),
+   Year INTEGER,
+   ArtistID INTEGER REFERENCES Artists(ArtistID)
+);
+CREATE table if not EXISTS Tracks (
+   TrackID SERIAL PRIMARY KEY,
+   Title VARCHAR(255),
+   Duration TIME,
+   AlbumID INTEGER REFERENCES Albums(AlbumID)
+);
+CREATE table if not EXISTS Artist_Genre (
+   ArtistID INTEGER REFERENCES public.Artists(ArtistID),
+   GenreID INTEGER REFERENCES public.Genres(GenreID),
+   PRIMARY KEY (ArtistID, GenreID)
+);
+CREATE table if not EXISTS Album_Track (
+   AlbumID INTEGER REFERENCES public.Albums(AlbumID),
+   TrackID INTEGER REFERENCES public.Tracks(TrackID),
+   PRIMARY KEY (AlbumID, TrackID)
+);
+CREATE table if not EXISTS Compilations (
+   CompilationID SERIAL PRIMARY KEY,
+   Title VARCHAR(255),
+   Year INTEGER
+);
+CREATE table if not EXISTS Compilation_Track (
+   CompilationID INTEGER REFERENCES public.Compilations(CompilationID),
+   TrackID INTEGER REFERENCES public.Tracks(TrackID),
+   PRIMARY KEY (CompilationID, TrackID)
+);
