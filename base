@@ -38,3 +38,100 @@ CREATE table if not EXISTS Compilation_Track (
    TrackID INTEGER REFERENCES public.Tracks(TrackID),
    PRIMARY KEY (CompilationID, TrackID)
 );
+INSERT INTO Artists (Name) VALUES
+('Artist 1'),
+('Artist 2'),
+('Artist 3'),
+('Artist 4');
+
+INSERT INTO Genres (Name) VALUES
+('Genre 1'),
+('Genre 2'),
+('Genre 3');
+
+INSERT INTO Albums (Title, Year, ArtistID) VALUES
+('Album 1', 2020, 1),
+('Album 2', 2019, 2),
+('Album 3', 2021, 3),
+('Album 4', 2018, 4);
+
+INSERT INTO Tracks (Title, Duration, AlbumID) VALUES
+('Track 1', '00:04:15', 1),
+('Track 2', '00:03:30', 1),
+('Track 3', '00:05:10', 2),
+('Track 4', '00:02:50', 2),
+('Track 5', '00:03:45', 3),
+('Track 6', '00:04:20', 4);
+
+INSERT INTO Artist_Genre (ArtistID, GenreID) VALUES
+(1, 1),
+(2, 2),
+(3, 3),
+(4, 1),
+(4, 2);
+
+INSERT INTO Album_Track (AlbumID, TrackID) VALUES
+(1, 1),
+(1, 2),
+(2, 3),
+(2, 4),
+(3, 5),
+(4, 6);
+
+INSERT INTO Compilations (Title, Year) VALUES
+('Compilation 1', 2018),
+('Compilation 2', 2019),
+('Compilation 3', 2020),
+('Compilation 4', 2021);
+
+INSERT INTO Compilation_Track (CompilationID, TrackID) VALUES
+(1, 1),
+(1, 2),
+(2, 3),
+(2, 4),
+(3, 5),
+(3, 6);
+
+SELECT Title, Duration FROM Tracks ORDER BY Duration DESC LIMIT 1;
+
+SELECT Title FROM Tracks WHERE Duration >= '00:03:30';
+
+SELECT Title FROM Compilations WHERE Year BETWEEN 2018 AND 2020;
+
+SELECT Name FROM Artists WHERE Name NOT LIKE '% %';
+
+SELECT Title FROM Tracks WHERE Title LIKE '%мой%' OR Title LIKE '%my%';
+
+SELECT Genres.Name, COUNT(Artist_Genre.ArtistID) AS "Number of Artists"
+FROM Genres
+LEFT JOIN Artist_Genre ON Genres.GenreID = Artist_Genre.GenreID
+GROUP BY Genres.Name;
+
+SELECT COUNT(*) AS "Number of Tracks"
+FROM Tracks
+LEFT JOIN Albums ON Tracks.AlbumID = Albums.AlbumID
+WHERE Albums.Year BETWEEN 2019 AND 2020;
+
+SELECT Albums.Title, AVG(TIME_TO_SEC(Tracks.Duration)) AS "Average Duration"
+FROM Albums
+JOIN Tracks ON Albums.AlbumID = Tracks.AlbumID
+GROUP BY Albums.Title;
+
+SELECT Name
+FROM Artists
+LEFT JOIN Albums ON Artists.ArtistID = Albums.ArtistID
+WHERE Albums.Year != 2020 OR Albums.Year IS NULL;
+
+SELECT Compilations.Title
+FROM Compilations
+JOIN Compilation_Track ON Compilations.CompilationID = Compilation_Track.CompilationID
+JOIN Tracks ON Compilation_Track.TrackID = Tracks.TrackID
+JOIN Albums ON Tracks.AlbumID = Albums.AlbumID
+JOIN Artists ON Albums.ArtistID = Artists.ArtistID
+WHERE Artists.Name = 'Artist 1';
+
+SELECT DISTINCT Albums.Title
+FROM Albums
+JOIN Album_Track ON Albums.AlbumID = Album_Track.AlbumID
+JOIN Tracks ON Album_Track.TrackID = Tracks.TrackID
+WHERE Tracks.TrackID NOT IN (SELECT TrackID FROM Compilation_Track);
