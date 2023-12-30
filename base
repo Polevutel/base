@@ -1,137 +1,122 @@
-CREATE table if not EXISTS Artists (
+CREATE TABLE IF NOT EXISTS Artists (
    ArtistID SERIAL PRIMARY KEY,
    Name VARCHAR(255)
 );
-CREATE table if not EXISTS Genres (
+
+CREATE TABLE IF NOT EXISTS Genres (
    GenreID SERIAL PRIMARY KEY,
    Name VARCHAR(255)
 );
-CREATE table if not EXISTS Albums (
+
+CREATE TABLE IF NOT EXISTS Albums (
    AlbumID SERIAL PRIMARY KEY,
    Title VARCHAR(255),
    Year INTEGER,
    ArtistID INTEGER REFERENCES Artists(ArtistID)
 );
-CREATE table if not EXISTS Tracks (
+
+CREATE TABLE IF NOT EXISTS Tracks (
    TrackID SERIAL PRIMARY KEY,
    Title VARCHAR(255),
-   Duration TIME,
+   Duration INTERVAL,
    AlbumID INTEGER REFERENCES Albums(AlbumID)
 );
-CREATE table if not EXISTS Artist_Genre (
-   ArtistID INTEGER REFERENCES public.Artists(ArtistID),
-   GenreID INTEGER REFERENCES public.Genres(GenreID),
-   PRIMARY KEY (ArtistID, GenreID)
-);
-CREATE table if not EXISTS Album_Track (
-   AlbumID INTEGER REFERENCES public.Albums(AlbumID),
-   TrackID INTEGER REFERENCES public.Tracks(TrackID),
-   PRIMARY KEY (AlbumID, TrackID)
-);
-CREATE table if not EXISTS Compilations (
+
+CREATE TABLE IF NOT EXISTS Compilations (
    CompilationID SERIAL PRIMARY KEY,
    Title VARCHAR(255),
    Year INTEGER
 );
-CREATE table if not EXISTS Compilation_Track (
-   CompilationID INTEGER REFERENCES public.Compilations(CompilationID),
-   TrackID INTEGER REFERENCES public.Tracks(TrackID),
+
+CREATE TABLE IF NOT EXISTS CompilationTrack (
+   CompilationID INTEGER REFERENCES Compilations(CompilationID),
+   TrackID INTEGER REFERENCES Tracks(TrackID),
    PRIMARY KEY (CompilationID, TrackID)
 );
-INSERT INTO Artists (Name) VALUES
-('Artist 1'),
-('Artist 2'),
-('Artist 3'),
-('Artist 4');
 
-INSERT INTO Genres (Name) VALUES
-('Genre 1'),
-('Genre 2'),
-('Genre 3');
+Теперь для заполнения таблицы связей между альбомами и исполнителями вы можете выполнить следующие запросы:
 
-INSERT INTO Albums (Title, Year, ArtistID) VALUES
-('Album 1', 2020, 1),
-('Album 2', 2019, 2),
-('Album 3', 2021, 3),
-('Album 4', 2018, 4);
-
-INSERT INTO Tracks (Title, Duration, AlbumID) VALUES
-('Track 1', '00:04:15', 1),
-('Track 2', '00:03:30', 1),
-('Track 3', '00:05:10', 2),
-('Track 4', '00:02:50', 2),
-('Track 5', '00:03:45', 3),
-('Track 6', '00:04:20', 4);
-
-INSERT INTO Artist_Genre (ArtistID, GenreID) VALUES
+INSERT INTO AlbumArtist (AlbumID, ArtistID) VALUES
 (1, 1),
 (2, 2),
 (3, 3),
-(4, 1),
-(4, 2);
+(1, 4);
 
-INSERT INTO Album_Track (AlbumID, TrackID) VALUES
+INSERT INTO Albums (Title, Year, ArtistID) VALUES
+('Альбом 1', 2020, 1),
+('Альбом 2', 2019, 2),
+('Альбом 3', 2018, 3);
+
+INSERT INTO CompilationTrack (CompilationID, TrackID) VALUES
 (1, 1),
-(1, 2),
-(2, 3),
-(2, 4),
-(3, 5),
-(4, 6);
+(2, 2),
+(1, 3),
+(3, 4);
+
+INSERT INTO Tracks (Title, Duration, AlbumID) VALUES
+('Трек 1', '00:04:30', 1),
+('Трек 2', '00:03:45', 2),
+('Трек 3', '00:05:15', 1),
+('Трек 4', '00:02:50', 3);
 
 INSERT INTO Compilations (Title, Year) VALUES
-('Compilation 1', 2018),
-('Compilation 2', 2019),
-('Compilation 3', 2020),
-('Compilation 4', 2021);
+('Сборник 1', 2019),
+('Сборник 2', 2020),
+('Сборник 3', 2018);
 
-INSERT INTO Compilation_Track (CompilationID, TrackID) VALUES
-(1, 1),
-(1, 2),
-(2, 3),
-(2, 4),
-(3, 5),
-(3, 6);
-
-SELECT Title, Duration FROM Tracks ORDER BY Duration DESC LIMIT 1;
-
-SELECT Title FROM Tracks WHERE Duration >= '00:03:30';
-
-SELECT Title FROM Compilations WHERE Year BETWEEN 2018 AND 2020;
-
-SELECT Name FROM Artists WHERE Name NOT LIKE '% %';
-
-SELECT Title FROM Tracks WHERE Title LIKE '%мой%' OR Title LIKE '%my%';
-
-SELECT Genres.Name, COUNT(Artist_Genre.ArtistID) AS "Number of Artists"
-FROM Genres
-LEFT JOIN Artist_Genre ON Genres.GenreID = Artist_Genre.GenreID
-GROUP BY Genres.Name;
-
-SELECT COUNT(*) AS "Number of Tracks"
+SELECT Title, Duration
 FROM Tracks
-LEFT JOIN Albums ON Tracks.AlbumID = Albums.AlbumID
-WHERE Albums.Year BETWEEN 2019 AND 2020;
+WHERE Duration = (
+   SELECT MAX(Duration)
+   FROM Tracks
+);
 
-SELECT Albums.Title, AVG(TIME_TO_SEC(Tracks.Duration)) AS "Average Duration"
+SELECT Title
+FROM Tracks
+WHERE Duration >= '00:03:30'::INTERVAL;
+
+SELECT Title
+FROM Compilations
+WHERE Year BETWEEN 2018 AND 2020;
+
+SELECT Name
+FROM Artists
+WHERE Name NOT LIKE '% %';
+
+SELECT Title FROM Tracks 
+WHERE Title ILIKE '% my %' 
+OR Title ILIKE 'my %' 
+OR Title ILIKE '% my' 
+OR Title ILIKE 'my';
+
+SELECT g.Name, COUNT(aa.ArtistID)
+FROM Genres g
+LEFT JOIN AlbumArtist aa ON g.GenreID = aa.GenreID
+GROUP BY g.Name;
+
+SELECT COUNT(t.TrackID)
+FROM Tracks t
+JOIN Albums a ON t.AlbumID = a.AlbumID
+WHERE a.Year BETWEEN 2019 AND 2020;
+
+SELECT Albums.Title, AVG(EXTRACT(EPOCH FROM Tracks.Duration)) AS "Average Duration"
 FROM Albums
 JOIN Tracks ON Albums.AlbumID = Tracks.AlbumID
 GROUP BY Albums.Title;
 
-SELECT Name
+
+SELECT Artists.Name
 FROM Artists
-LEFT JOIN Albums ON Artists.ArtistID = Albums.ArtistID
-WHERE Albums.Year != 2020 OR Albums.Year IS NULL;
+WHERE Artists.ArtistID NOT IN (
+    SELECT Albums.ArtistID
+    FROM Albums
+    WHERE Albums.Year = 2020
+);
 
 SELECT Compilations.Title
 FROM Compilations
-JOIN Compilation_Track ON Compilations.CompilationID = Compilation_Track.CompilationID
-JOIN Tracks ON Compilation_Track.TrackID = Tracks.TrackID
+JOIN CompilationTrack ON Compilations.CompilationID = CompilationTrack.CompilationID
+JOIN Tracks ON CompilationTrack.TrackID = Tracks.TrackID
 JOIN Albums ON Tracks.AlbumID = Albums.AlbumID
 JOIN Artists ON Albums.ArtistID = Artists.ArtistID
 WHERE Artists.Name = 'Artist 1';
-
-SELECT DISTINCT Albums.Title
-FROM Albums
-JOIN Album_Track ON Albums.AlbumID = Album_Track.AlbumID
-JOIN Tracks ON Album_Track.TrackID = Tracks.TrackID
-WHERE Tracks.TrackID NOT IN (SELECT TrackID FROM Compilation_Track);
