@@ -11,8 +11,13 @@ CREATE TABLE IF NOT EXISTS Genres (
 CREATE TABLE IF NOT EXISTS Albums (
    AlbumID SERIAL PRIMARY KEY,
    Title VARCHAR(255),
-   Year INTEGER,
-   ArtistID INTEGER REFERENCES Artists(ArtistID)
+   Year INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS ArtistsAlbums (
+   ArtistID INTEGER REFERENCES Artists(ArtistID),
+   AlbumID INTEGER REFERENCES Albums(AlbumID),
+   PRIMARY KEY(ArtistID, AlbumID)
 );
 
 CREATE TABLE IF NOT EXISTS Tracks (
@@ -34,24 +39,35 @@ CREATE TABLE IF NOT EXISTS CompilationTrack (
    PRIMARY KEY (CompilationID, TrackID)
 );
 
+CREATE TABLE IF NOT EXISTS ArtistsGenres (
+   ArtistID INTEGER REFERENCES Artists(ArtistID),
+   GenreID INTEGER REFERENCES Genres(GenreID),
+   PRIMARY KEY(ArtistID, GenreID)
+);
+
 Теперь для заполнения таблицы связей между альбомами и исполнителями вы можете выполнить следующие запросы:
 
-INSERT INTO AlbumArtist (AlbumID, ArtistID) VALUES
+INSERT INTO Artists (Name) VALUES
+('Исполнитель 1'),
+('Исполнитель 2'),
+('Исполнитель 3'),
+('Исполнитель 4');
+
+INSERT INTO Genres (Name) VALUES
+('Жанр 1'),
+('Жанр 2'),
+('Жанр 3');
+
+INSERT INTO Albums (Title, Year) VALUES
+('Альбом 1', 2020),
+('Альбом 2', 2019),
+('Альбом 3', 2018);
+
+INSERT INTO ArtistsAlbums (ArtistID, AlbumID) VALUES
 (1, 1),
 (2, 2),
 (3, 3),
 (1, 4);
-
-INSERT INTO Albums (Title, Year, ArtistID) VALUES
-('Альбом 1', 2020, 1),
-('Альбом 2', 2019, 2),
-('Альбом 3', 2018, 3);
-
-INSERT INTO CompilationTrack (CompilationID, TrackID) VALUES
-(1, 1),
-(2, 2),
-(1, 3),
-(3, 4);
 
 INSERT INTO Tracks (Title, Duration, AlbumID) VALUES
 ('Трек 1', '00:04:30', 1),
@@ -63,6 +79,18 @@ INSERT INTO Compilations (Title, Year) VALUES
 ('Сборник 1', 2019),
 ('Сборник 2', 2020),
 ('Сборник 3', 2018);
+
+INSERT INTO CompilationTrack (CompilationID, TrackID) VALUES
+(1, 1),
+(2, 2),
+(1, 3),
+(3, 4);
+
+INSERT INTO ArtistsGenres (ArtistID, GenreID) VALUES
+(1, 1),
+(2, 2),
+(3, 3),
+(4, 1);
 
 SELECT Title, Duration
 FROM Tracks
@@ -89,9 +117,9 @@ OR Title ILIKE 'my %'
 OR Title ILIKE '% my' 
 OR Title ILIKE 'my';
 
-SELECT g.Name, COUNT(aa.ArtistID)
+SELECT g.Name, COUNT(ag.ArtistID)
 FROM Genres g
-LEFT JOIN AlbumArtist aa ON g.GenreID = aa.GenreID
+LEFT JOIN ArtistsGenres ag ON g.GenreID = ag.GenreID
 GROUP BY g.Name;
 
 SELECT COUNT(t.TrackID)
@@ -104,13 +132,13 @@ FROM Albums
 JOIN Tracks ON Albums.AlbumID = Tracks.AlbumID
 GROUP BY Albums.Title;
 
-
 SELECT Artists.Name
 FROM Artists
-WHERE Artists.ArtistID NOT IN (
-    SELECT Albums.ArtistID
-    FROM Albums
-    WHERE Albums.Year = 2020
+WHERE Artists.ArtistId NOT IN (
+    SELECT a.ArtistId
+    FROM ArtistsAlbums aa
+    JOIN Albums a ON aa.AlbumId = a.AlbumId
+    WHERE a.Year = 2020
 );
 
 SELECT Compilations.Title
@@ -118,5 +146,6 @@ FROM Compilations
 JOIN CompilationTrack ON Compilations.CompilationID = CompilationTrack.CompilationID
 JOIN Tracks ON CompilationTrack.TrackID = Tracks.TrackID
 JOIN Albums ON Tracks.AlbumID = Albums.AlbumID
-JOIN Artists ON Albums.ArtistID = Artists.ArtistID
-WHERE Artists.Name = 'Artist 1';
+JOIN ArtistsAlbums ON ArtistsAlbums.AlbumID = Albums.AlbumID
+JOIN Artists ON ArtistsArtist.AlbumID = ArtistsAlbums.ArtistID
+WHERE Artists.Name = 'Исполнитель 1';
