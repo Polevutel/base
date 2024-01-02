@@ -45,7 +45,6 @@ CREATE TABLE IF NOT EXISTS ArtistsGenres (
    PRIMARY KEY(ArtistID, GenreID)
 );
 
-Теперь для заполнения таблицы связей между альбомами и исполнителями вы можете выполнить следующие запросы:
 
 INSERT INTO Artists (Name) VALUES
 ('Исполнитель 1'),
