@@ -110,11 +110,17 @@ SELECT Name
 FROM Artists
 WHERE Name NOT LIKE '% %';
 
-SELECT Title FROM Tracks 
-WHERE Title ILIKE '% my %' 
-OR Title ILIKE 'my %' 
-OR Title ILIKE '% my' 
-OR Title ILIKE 'my';
+SELECT Title
+FROM Tracks
+WHERE Title ILIKE '% my %'
+OR Title ILIKE 'my %'
+OR Title ILIKE '% my'
+OR Title ILIKE 'my'
+OR Title ILIKE '% my%'
+OR Title ILIKE '%мой %'
+OR Title ILIKE 'мой %'
+OR Title ILIKE '% мой'
+OR Title ILIKE 'мой';
 
 SELECT g.Name, COUNT(ag.ArtistID)
 FROM Genres g
