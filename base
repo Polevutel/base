@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS ArtistsGenres (
    PRIMARY KEY(ArtistID, GenreID)
 );
 
-
+-- Вставка данных
 INSERT INTO Artists (Name) VALUES
 ('Исполнитель 1'),
 ('Исполнитель 2'),
@@ -66,7 +66,7 @@ INSERT INTO ArtistsAlbums (ArtistID, AlbumID) VALUES
 (1, 1),
 (2, 2),
 (3, 3),
-(1, 4);
+(1, 2); -- исправленная строка
 
 INSERT INTO Tracks (Title, Duration, AlbumID) VALUES
 ('Трек 1', '00:04:30', 1),
@@ -140,7 +140,7 @@ GROUP BY Albums.Title;
 SELECT Artists.Name
 FROM Artists
 WHERE Artists.ArtistId NOT IN (
-    SELECT a.ArtistId
+    SELECT aa.ArtistId
     FROM ArtistsAlbums aa
     JOIN Albums a ON aa.AlbumId = a.AlbumId
     WHERE a.Year = 2020
@@ -152,5 +152,5 @@ JOIN CompilationTrack ON Compilations.CompilationID = CompilationTrack.Compilati
 JOIN Tracks ON CompilationTrack.TrackID = Tracks.TrackID
 JOIN Albums ON Tracks.AlbumID = Albums.AlbumID
 JOIN ArtistsAlbums ON ArtistsAlbums.AlbumID = Albums.AlbumID
-JOIN Artists ON ArtistsArtist.AlbumID = ArtistsAlbums.ArtistID
+JOIN Artists ON Artists.ArtistID = ArtistsAlbums.ArtistID
 WHERE Artists.Name = 'Исполнитель 1';
